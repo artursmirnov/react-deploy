@@ -152,7 +152,9 @@ Client.prototype.displayRevisions = function () {
   })
 }
 
-// activate revisions
+Client.prototype.generateRevisionKey = function () {
+  return generate().then(res => this.useBranchRevisions ? res.branch : res.revisionKey)
+}
 
 // upload revisions files
 Client.prototype.createRevision = function () {
