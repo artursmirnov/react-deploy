@@ -43,6 +43,7 @@ exports.MIN_MULTIPART_SIZE = MIN_MULTIPART_SIZE
 
 function Client (options) {
   options = options || {}
+  this.useBranchRevisions = !!options.useBranchRevisions
   this.s3 = options.s3Client || new AWS.S3(options.s3Options)
   this.s3Pend = new Pend()
   this.s3Pend.max = options.maxAsyncS3 || 20
@@ -157,17 +158,18 @@ Client.prototype.displayRevisions = function () {
 Client.prototype.createRevision = function () {
   generate().then((res) => {
     let self = this
+    let revision = this.useBranchRevisions ? res.branch : res.revisionKey
     let newParams = {
       Bucket: self.s3.config.Bucket,
       CopySource: `${self.s3.config.Bucket}/index.html`,
       ContentType: 'text/html',
       ACL: 'public-read-write',
       Metadata: {
-        'revision': res.revisionKey,
+        'revision': revision,
         'updated': (new Date()).toDateString()
       },
       MetadataDirective: 'COPY',
-      Key: `index:${res.revisionKey}.html`
+      Key: `index:${revision}.html`
     }
 
     // console.log(newParams,'newParams');
@@ -191,17 +193,18 @@ Client.prototype.createRevision = function () {
 Client.prototype.serviceWorker = function () {
   generate().then((res) => {
     let self = this
+    let revision = this.useBranchRevisions ? res.branch : res.revisionKey
     let newParams = {
       Bucket: self.s3.config.Bucket,
       CopySource: `${self.s3.config.Bucket}/service-worker.js`,
       ContentType: 'application/javascript',
       ACL: 'public-read-write',
       Metadata: {
-        'revision': res.revisionKey,
+        'revision': revision,
         'updated': (new Date()).toDateString()
       },
       MetadataDirective: 'COPY',
-      Key: `service-worker:${res.revisionKey}.js`
+      Key: `service-worker:${revision}.js`
     }
 
     // console.log(newParams,'newParams');
